@@ -1,0 +1,92 @@
+#Базовые пакеты для работы системы (в ручной установке arch)
+pacstrap /mnt base base-devel linux linux-firmware linux-headers efibootmgr grub nano networkmanager terminus-font fastfetch
+
+#Базовые пакеты для настройки окруженя (через pacman в tty)
+sudo pacman -S --needed sddm hyprland kitty fish thunar git
+
+#Включение службы sddm
+sudo systemctl enable sddm
+
+#Обновление репоизориев
+sudo pacman -Syu
+
+#Пакеты для полноценной работы окружения
+sudo pacman -S --needed polkit-kde-agent dunst hyprpaper waybar wl-clipboard wofi xdg-desktop-portal-hyprland xdg-desktop-portal-gtk pipewire pipewire-pulse
+
+#Установка архиватора
+sudo pacman -S --needed unzip engrampa thunar-archive-plugin
+
+#Установка yay
+cd ~
+mkdir tools && cd tools
+git clone https://aur.archlinux.org/yay.git
+cd yay
+makepkg -si
+cd ..
+sudo rm -rf *
+
+#Необходимые шрифты для окружения
+sudo pacman -S --needed otf-font-awesome ttf-jetbrains-mono-nerd ttf-nerd-fonts-symbols woff2-font-awesome
+
+#Дополнительные пакеты для окружения через yay
+yay -S wlogout
+
+#Установка необходимых драйверов и их настройка
+sudo pacman -S --needed amd-ucode
+yay -S zenpower3-dkms
+sudo nano /etc/modprobe.d/zenpower.conf (добавить следующий текст blacklist k10temp)
+sudo modprobe -r k10temp
+sudo modprobe zenpower
+
+yay -S r8125-dkms
+sudo nano /etc/modprobe.d/r8125.conf (добавить следующий текст blacklist r8169)
+sudo modprobe -r r8169
+sudo modprobe r8125
+
+sudo pacman -S --needed mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon vulkan-icd-loader lib32-vulkan-icd-loader vulkan-tools mangohud lib32-mangohud goverlay
+
+sudo mkinitcpio -P
+
+sudo pacman -S --needed ethtool
+
+sudo ethtool -s eno1 wol g
+
+sudo nano /etc/default/grub (вставить в строку GRUB_CMDLINE_LINUX_DEFAULT cледующее amdgpu.ppfeaturemask=0xffffffff pcie_aspm=force)
+
+sudo grub-mkconfig -o /boot/grub/grub.cfg
+
+sudo pacman -S --needed corectrl
+
+sudo nano /etc/polkit-1/rules.d/90-corectrl.rules (вставить следующий код на JS)
+
+polkit.addRule(function(action, subject) {
+    if ((action.id == "org.corectrl.helper.init" ||
+         action.id == "org.corectrl.helperkiller.init") &&
+        subject.isInGroup("maks")) {
+        return polkit.Result.YES;
+    }
+});
+
+#Установить пакеты для работы остального окружения
+sudo pacman -S --needed gnome-calendar pavucontrol nm-connection-editor hyprlock hypridle hyprshot
+
+#Автовход в SDDM
+sudo nano /etc/sddm.conf.d/autologin.conf (добавление в файл следующего)
+
+[Autologin]
+User=maks
+Session=hyprland
+
+#Перезапуск системы
+sudo systemctl reboot
+
+#Установка инструментов
+yay -S sublime-text-4
+yay -S v2rayn-bin
+
+#Установка игр
+sudo pacman -S --needed steam lutris
+
+#Установка proton
+yay -S protonplus
+
